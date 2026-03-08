@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { type AxiosResponse } from 'axios';
 import { cookies } from 'next/headers';
 
 import type { Note, NoteTag } from '@/types/note';
@@ -18,7 +18,7 @@ interface FetchNotesResponse {
   totalPages: number;
 }
 
-async function getCookieHeader() {
+async function getCookieHeader(): Promise<string> {
   const cookieStore = await cookies();
   return cookieStore.toString();
 }
@@ -55,17 +55,16 @@ export async function fetchNoteById(noteId: string): Promise<Note> {
   return res.data;
 }
 
-export async function checkSession(): Promise<User | null> {
+// ✅ повертає повний response
+export async function checkSession(): Promise<AxiosResponse<User | null>> {
   const cookieHeader = await getCookieHeader();
 
-  const res = await axios.get<User | null>(`${baseURL}/auth/session`, {
+  return axios.get<User | null>(`${baseURL}/auth/session`, {
     headers: {
       Cookie: cookieHeader,
     },
     withCredentials: true,
   });
-
-  return res.data;
 }
 
 export async function getMe(): Promise<User> {

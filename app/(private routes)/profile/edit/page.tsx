@@ -7,17 +7,19 @@ import { useRouter } from 'next/navigation';
 import css from './EditProfilePage.module.css';
 import type { User } from '@/types/user';
 import { getMe, updateMe } from '@/lib/api/clientApi';
+import { useAuthStore } from '@/lib/store/authStore';
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const setUser = useAuthStore((state) => state.setUser);
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setLocalUser] = useState<User | null>(null);
   const [username, setUsername] = useState('');
 
   useEffect(() => {
     const loadUser = async () => {
       const currentUser = await getMe();
-      setUser(currentUser);
+      setLocalUser(currentUser);
       setUsername(currentUser.username);
     };
 
@@ -26,7 +28,11 @@ export default function EditProfilePage() {
 
   const handleSubmit = async (formData: FormData) => {
     const nextUsername = String(formData.get('username') ?? '');
-    await updateMe({ username: nextUsername });
+    const updatedUser = await updateMe({ username: nextUsername });
+
+    // ✅ оновлюємо глобальний auth store
+    setUser(updatedUser);
+
     router.push('/profile');
   };
 
@@ -56,7 +62,7 @@ export default function EditProfilePage() {
               type="text"
               className={css.input}
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
             />
           </div>
 
